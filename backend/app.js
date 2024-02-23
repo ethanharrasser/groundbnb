@@ -13,17 +13,20 @@ const isProduction = environment === 'production';
 
 const app = express();
 
-// Middleware
+app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
+
 if (!isProduction) {
     app.use(cors());
 }
+
 app.use(
     helmet.crossOriginResourcePolicy({
         policy: "cross-origin"
     })
 );
+
 app.use(
     csurf({
         cookie: {
