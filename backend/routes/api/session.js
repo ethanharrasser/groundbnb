@@ -1,11 +1,25 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
+const { check } = require('express-validator');
 
+const { handleValidationErrors } = require('../../utils/validation.js');
 const { setTokenCookie, restoreUser } = require('../../utils/auth.js');
 const { User } = require('../../db/models');
 
 const router = express.Router();
+
+// Credential and password validation middleware
+const validateLogin = [
+    check('credential')
+        .exists({ values: 'falsy' })
+        .notEmpty()
+        .withMessage('Please provide a valid email or username.'),
+    check('password')
+        .exists({ values: 'falsy' })
+        .withMessage('Please provide a password.'),
+    handleValidationErrors
+];
 
 // GET /api/session
 router.get('/', async (req, res) => {
