@@ -7,6 +7,23 @@ const { User } = require('../../db/models');
 
 const router = express.Router();
 
+// GET /api/session
+router.get('/', async (req, res) => {
+    const { user } = req;
+
+    if (!user) {
+        return res.json({ user: null });
+    };
+
+    const safeUser = {
+        id: user.id,
+        email: user.email,
+        username: user.username
+    };
+
+    res.json({ user: safeUser });
+});
+
 // POST /api/session
 router.post('/', async (req, res, next) => {
     const { credential, password } = req.body;
@@ -43,7 +60,7 @@ router.post('/', async (req, res, next) => {
 
 // DELETE /api/session
 router.delete('/', (_req, res) => {
-    res.clearCookie('XSRF-TOKEN');
+    res.clearCookie('token');
     res.json({ message: 'Success' });
 });
 
