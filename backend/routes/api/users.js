@@ -10,6 +10,14 @@ const router = express.Router();
 
 // Username, email, and password validation middleware
 const validateSignup = [
+    check('firstName')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 2 })
+        .withMessage('Please provide a first name with 2 or more characters.'),
+    check('lastName')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 2 })
+        .withMessage('Please provide a last name with 2 or more characters.'),
     check('email')
         .exists({ values: 'falsy' })
         .isEmail()
@@ -31,13 +39,21 @@ const validateSignup = [
 
 // POST /api/users
 router.post('/', validateSignup, async (req, res) => {
-    const { username, email, password } = req.body;
+    const { firstName, lastName, username, email, password } = req.body;
     const hashedPassword = bcrypt.hashSync(password);
 
-    const user = await User.create({ email, username, hashedPassword });
+    const user = await User.create({
+        firstName,
+        lastName,
+        email,
+        username,
+        hashedPassword
+    });
 
     const safeUser = {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         username: user.username
     };
