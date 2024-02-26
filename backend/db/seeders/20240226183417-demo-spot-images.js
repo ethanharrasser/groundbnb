@@ -28,7 +28,8 @@ module.exports = {
       },
       {
         spotId: 4,
-        url: 'https://static.wikia.nocookie.net/elderscrolls/images/7/76/Severin_Manor.png/revision/latest/scale-to-width-down/1000?cb=20130206192733'
+        url: 'https://static.wikia.nocookie.net/elderscrolls/images/7/76/Severin_Manor.png/revision/latest/scale-to-width-down/1000?cb=20130206192733',
+        preview: false
       },
     ], {
       valdate: true
