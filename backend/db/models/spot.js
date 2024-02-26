@@ -43,9 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         min: 0
       }
-    },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
+    }
   }, {
     sequelize,
     modelName: 'Spot',

@@ -30,9 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isDate: true
       }
-    },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
+    }
   }, {
     sequelize,
     modelName: 'Booking',
