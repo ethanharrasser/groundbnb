@@ -87,7 +87,7 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
         lat, lng, name, description, price
     });
 
-    res.status(201).json(newSpot);
+    res.json(newSpot);
 });
 
 // GET /api/spots/current
@@ -108,6 +108,36 @@ router.get('/:spotId', async (req, res) => {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
     }
 
+    res.json(spot);
+});
+
+// PUT /api/spots/:spotId
+router.put('/:spotId', requireAuth, validateSpot, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+    if (spot.ownerId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const {
+        address, city, state, country,
+        lat, lng, name, description, price
+    } = req.body
+
+    spot.address = address;
+    spot.city = city;
+    spot.state = state;
+    spot.country = country;
+    spot.lat = lat;
+    spot.lng = lng;
+    spot.name = name;
+    spot.description = description;
+    spot.price = price;
+
+    await spot.save();
     res.json(spot);
 });
 
