@@ -74,4 +74,16 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
     res.status(201).json(newSpot);
 });
 
+// GET /api/spots/current
+router.get('/current', requireAuth, async (req, res) => {
+    const userId = req.user.id
+    const spots = await Spot.findAll({
+        where: {
+            ownerId: userId
+        }
+    });
+
+    res.json(spots);
+})
+
 module.exports = router;
