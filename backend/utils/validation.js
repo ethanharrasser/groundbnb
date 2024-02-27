@@ -1,6 +1,6 @@
 const { check, validationResult } = require('express-validator');
 
-// Error handler middleware
+// General error handler middleware
 const handleValidationErrors = (req, _res, next) => {
     const validationErrors = validationResult(req);
 
@@ -60,6 +60,50 @@ const validateSpot = [
     handleValidationErrors
 ]
 
+// Spot query filters validation middleware
+const validateSpotQueryFilters = [
+    check('page')
+        .default('1')
+        .isInt()
+        .custom(value => value >= 1 && value <= 10)
+        .withMessage('Page must be greater than or equal to 1'),
+    check('size')
+        .default('20')
+        .isInt()
+        .custom(value => value >= 1 && value <= 20)
+        .withMessage('Size must be greater than or equal to 1'),
+    check('minLat')
+        .optional()
+        .isDecimal()
+        .custom(value => value > -90)
+        .withMessage('Minimum latitude is invalid'),
+    check('maxLat')
+        .optional()
+        .isDecimal()
+        .custom(value => value < 90)
+        .withMessage('Maximum latitude is invalid'),
+    check('minLng')
+        .optional()
+        .isDecimal()
+        .custom(value => value > -180)
+        .withMessage('Minimum longitude is invalid'),
+    check('maxLng')
+        .optional()
+        .isDecimal()
+        .custom(value => value < -180)
+        .withMessage('Maximum longitude is invalid'),
+    check('minPrice')
+        .optional()
+        .isDecimal()
+        .custom(value => value > 0)
+        .withMessage('Minimum price must be greater than or equal to 0'),
+    check('maxPrice')
+        .optional()
+        .isDecimal()
+        .custom(value => value > 0)
+        .withMessage('Maximum price must be greater than or equal to 0'),
+]
+
 // User signup username, email, and password validation middleware
 const validateSignup = [
     check('firstName')
@@ -89,9 +133,9 @@ const validateSignup = [
     handleValidationErrors
 ];
 
-
 module.exports = {
     handleValidationErrors,
     validateSpot,
-    validateSignup
+    validateSignup,
+    validateSpotQueryFilters,
 };

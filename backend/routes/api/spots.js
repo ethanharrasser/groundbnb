@@ -8,7 +8,7 @@ const router = express.Router();
 
 // GET /api/spots
 router.get('/', async (req, res) => {
-    const {
+    let {
         page, size, minLat, maxLat,
         minLng, maxLng, minPrice, maxPrice
     } = req.query
