@@ -10,19 +10,28 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       Spot.hasMany(models.Review, {
-        foreignKey: 'spotId',
+        foreignKey: {
+          name: 'spotId',
+          allowNull: false
+        },
         onDelete: 'CASCADE',
         hooks: true
       });
 
       Spot.hasMany(models.Booking, {
-        foreignKey: 'spotId',
+        foreignKey: {
+          name: 'spotId',
+          allowNull: false
+        },
         onDelete: 'CASCADE',
         hooks: true
       });
 
       Spot.hasMany(models.SpotImage, {
-        foreignKey: 'spotId',
+        foreignKey: {
+          name: 'spotId',
+          allowNull: false
+        },
         onDelete: 'CASCADE',
         hooks: true
       });
