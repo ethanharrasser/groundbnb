@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { validateSpot } = require('../../utils/validation.js');
+const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
 const { Spot, SpotImage } = require('../../db/models');
 
