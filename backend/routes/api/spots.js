@@ -2,7 +2,7 @@ const express = require('express');
 
 const { validateSpot } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot } = require('../../db/models');
+const { Spot, SpotImage } = require('../../db/models');
 
 const router = express.Router();
 
@@ -13,9 +13,7 @@ router.get('/', async (req, res) => {
         minLng, maxLng, minPrice, maxPrice
     } = req.query
 
-    const spots = await Spot.findAll({
-
-    });
+    const spots = await Spot.findAll();
 
     res.json(spots);
 });
@@ -39,25 +37,43 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
 
 // GET /api/spots/current
 router.get('/current', requireAuth, async (req, res) => {
-    const userId = req.user.id
     const spots = await Spot.findAll({
         where: {
-            ownerId: userId
+            ownerId: req.user.id
         }
     });
     res.json(spots);
-})
+});
 
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
-    const spotId = req.params.spotId;
-    const spot = await Spot.findByPk(spotId);
+    const spot = await Spot.findByPk(req.params.spotId);
 
     if (spot === null) {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
     }
 
     res.json(spot);
-})
+});
+
+// POST /api/spots/:spotId/images
+router.post('/:spotId/images', requireAuth, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+    if (spot.ownerId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const { url, preview } = req.body;
+    const spotImage = await SpotImage.create({
+        url,
+        preview
+    });
+
+    res.json(spotImage);
+});
 
 module.exports = router;
