@@ -1,4 +1,5 @@
 const express = require('express');
+const { Op } = require('sequelize');
 
 const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
@@ -7,13 +8,67 @@ const { Spot, SpotImage } = require('../../db/models');
 const router = express.Router();
 
 // GET /api/spots
-router.get('/', async (req, res) => {
-    let {
+router.get('/', validateSpotQueryFilters, async (req, res) => {
+    const {
         page, size, minLat, maxLat,
         minLng, maxLng, minPrice, maxPrice
     } = req.query
 
-    const spots = await Spot.findAll();
+    const pagination = {
+        limit: size,
+        offset: (page - 1) * size
+    };
+
+    const queryFilters = {
+        where: {}
+    };
+
+    // Adding minLat and maxLat filters
+    if (minLat && maxLat) {
+        queryFilters.where.lat = {[Op.and]: {
+            [Op.gte]: minLat,
+            [Op.lte]: maxLat
+        }};
+    } else {
+        if (minLat) {
+            queryFilters.where.lat = { [Op.gte]: minLat };
+        } else if (maxLat) {
+            queryFilters.where.lat = { [Op.lte]: maxLat };
+        }
+    }
+
+    // Adding minLng and maxLng filters
+    if (minLng && maxLng) {
+        queryFilters.where.lng = {[Op.and]: {
+            [Op.gte]: minLng,
+            [Op.lte]: maxLng
+        }};
+    } else {
+        if (minLng) {
+            queryFilters.where.lng = { [Op.gte]: minLng };
+        } else if (maxLng) {
+            queryFilters.where.lng = { [Op.lte]: maxLng };
+        }
+    }
+
+    // Adding minPrice and maxPrice filters
+    if (minPrice && maxPrice) {
+        queryFilters.where.price = {[Op.and]: {
+            [Op.gte]: minPrice,
+            [Op.lte]: maxPrice
+        }};
+    } else {
+        if (minPrice) {
+            queryFilters.where.price = { [Op.gte]: minPrice };
+        } else if (maxPrice) {
+            queryFilters.where.price = { [Op.lte]: maxPrice };
+        }
+    }
+
+    const spots = await Spot.findAll({
+        ...queryFilters,
+        ...pagination
+    });
 
     res.json(spots);
 });
