@@ -1,5 +1,4 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 
 const { validateSpot } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
@@ -53,6 +52,11 @@ router.get('/current', requireAuth, async (req, res) => {
 router.get('/:spotId', async (req, res) => {
     const spotId = req.params.spotId;
     const spot = await Spot.findByPk(spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
     res.json(spot);
 })
 
