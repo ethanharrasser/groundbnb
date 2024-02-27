@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 
 // Error handler middleware
 const handleValidationErrors = (req, _res, next) => {
@@ -61,5 +61,6 @@ const validateSpot = [
 ]
 
 module.exports = {
-    handleValidationErrors
+    handleValidationErrors,
+    validateSpot
 };

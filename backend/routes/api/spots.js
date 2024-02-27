@@ -1,16 +1,19 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { Op } = require('sequelize');
-const { check } = require('express-validator');
 
-const { validateSpot, handleValidationErrors } = require('../../utils/validation.js');
-const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth.js');
+const { validateSpot } = require('../../utils/validation.js');
+const { requireAuth } = require('../../utils/auth.js');
 const { Spot } = require('../../db/models');
 
 const router = express.Router();
 
 // GET /api/spots
 router.get('/', async (req, res) => {
+    const {
+        page, size, minLat, maxLat,
+        minLng, maxLng, minPrice, maxPrice
+    } = req.query
+
     const spots = await Spot.findAll({
 
     });
