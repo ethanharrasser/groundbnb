@@ -82,7 +82,6 @@ router.get('/current', requireAuth, async (req, res) => {
             ownerId: userId
         }
     });
-
     res.json(spots);
 })
 
