@@ -90,7 +90,7 @@ const validateSpotQueryFilters = [
     query('maxLng')
         .optional()
         .isDecimal()
-        .custom(value => value < -180)
+        .custom(value => value < 180)
         .withMessage('Maximum longitude is invalid'),
     query('minPrice')
         .optional()
@@ -102,6 +102,7 @@ const validateSpotQueryFilters = [
         .isDecimal()
         .custom(value => value > 0)
         .withMessage('Maximum price must be greater than or equal to 0'),
+    handleValidationErrors
 ]
 
 // User signup username, email, and password validation middleware
