@@ -85,4 +85,11 @@ router.get('/current', requireAuth, async (req, res) => {
     res.json(spots);
 })
 
+// GET /api/spots/:spotId
+router.get('/:spotId', async (req, res) => {
+    const spotId = req.params.spotId;
+    const spot = await Spot.findByPk(spotId);
+    res.json(spot);
+})
+
 module.exports = router;
