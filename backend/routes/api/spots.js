@@ -66,11 +66,24 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
     }
 
     const spots = await Spot.findAll({
+        // include: {
+        //     model: SpotImage,
+        //     where: {
+        //         preview: true
+        //     },
+        //     as: 'previewImage'
+        // },
+
+        // TODO: Fix this eager loading aliasing issue
+        // Should be sent in body as previewImage (singular) for non-detail queries ...
+        // ... and as SpotImages (non-aliased) for detail queries
+        // Possible solution: Lazy load using SpotImage.findOne() instead
+
         ...queryFilters,
         ...pagination
     });
 
-    res.json(spots);
+    res.json({ Spots: spots, page: page, size: size});
 });
 
 // POST /api/spots
