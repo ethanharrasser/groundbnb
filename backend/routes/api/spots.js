@@ -195,7 +195,7 @@ router.get('/:spotId', async (req, res) => {
         attributes: {
             include: [
                 [fn('COUNT', col('Reviews.id')), 'numReviews'],
-                [fn('AVG', col('Reviews.stars')), 'avgRating']
+                [fn('AVG', col('Reviews.stars')), 'avgStarRating']
             ]
         }
     });
