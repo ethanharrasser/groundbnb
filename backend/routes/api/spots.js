@@ -1,9 +1,9 @@
 const express = require('express');
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 
 const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot, SpotImage } = require('../../db/models');
+const { Spot, SpotImage, Review, User } = require('../../db/models');
 
 const router = express.Router();
 
@@ -69,25 +69,55 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
         }
     }
 
-    const spots = await Spot.findAll({
+    let spots = await Spot.findAll({
+        ...queryFilters,
+        ...pagination,
+
+        // // Eager load previewImage
         // include: {
         //     model: SpotImage,
+        //     attributes: [['url', 'previewImage']],
         //     where: {
-        //         preview: true
+        //         preview: true,
         //     },
-        //     as: 'previewImage'
-        // },
-
-        // TODO: Fix this eager loading aliasing issue
-        // Should be sent in body as previewImage (singular) for non-detail queries ...
-        // ... and as SpotImages (non-aliased) for detail queries
-        // Possible solution: Lazy load using SpotImage.findOne() instead
-
-        ...queryFilters,
-        ...pagination
+        //     limit: 1,
+        // }
     });
 
-    res.json({ Spots: spots, page: page, size: size});
+    // This entire block could probably be condensed into a helper function - todo later?
+    // addAvgRatingAndPreviewImage
+    spots = await Promise.all(
+        spots.map(async spot => {
+            spot = spot.toJSON()
+
+            // Adding avgRating attribute
+            const { count, rows } = await Review.findAndCountAll({
+                attributes: ['stars'],
+                where: {
+                    spotId: spot.id
+                },
+                raw: true
+            });
+            const avgRating = rows.reduce((acc, ele) => acc + ele.stars, 0) / count;
+            spot.avgRating = (avgRating) ? avgRating : 'No reviews yet';
+
+            // Adding previewImage attribute
+            const previewImage = await SpotImage.findOne({
+                attributes: ['url'],
+                where: {
+                    spotId: spot.id,
+                    preview: true
+                },
+                limit: 1,
+                raw: true
+            });
+            spot.previewImage = (previewImage) ? previewImage.url : 'No preview image';
+
+            return spot;
+        })
+    );
+
+    res.json({ Spots: spots, page: page, size: size });
 });
 
 // POST /api/spots
@@ -109,21 +139,79 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
 
 // GET /api/spots/current
 router.get('/current', requireAuth, async (req, res) => {
-    const spots = await Spot.findAll({
+    let spots = await Spot.findAll({
         where: {
             ownerId: req.user.id
         }
     });
+
+    // addAvgRatingAndPreviewImage
+    spots = await Promise.all(
+        spots.map(async spot => {
+            spot = spot.toJSON()
+
+            // Adding avgRating attribute
+            const { count, rows } = await Review.findAndCountAll({
+                attributes: ['stars'],
+                where: {
+                    spotId: spot.id
+                },
+                raw: true
+            });
+            const avgRating = rows.reduce((acc, ele) => acc + ele.stars, 0) / count;
+            spot.avgRating = (avgRating) ? avgRating : 'No reviews yet';
+
+            // Adding previewImage attribute
+            const previewImage = await SpotImage.findOne({
+                attributes: ['url'],
+                where: {
+                    spotId: spot.id,
+                    preview: true
+                },
+                limit: 1,
+                raw: true
+            });
+            spot.previewImage = (previewImage) ? previewImage.url : 'No preview image';
+
+            return spot;
+        })
+    );
+
     res.json(spots);
 });
 
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
-    const spot = await Spot.findByPk(req.params.spotId);
+    let spot = await Spot.findByPk(req.params.spotId, {
+        include: [
+            {
+                model: SpotImage
+            },
+            {
+                model: Review,
+                attributes: []
+            }
+        ],
+        attributes: {
+            include: [
+                [fn('COUNT', col('Reviews.id')), 'numReviews'],
+                [fn('AVG', col('Reviews.stars')), 'avgRating']
+            ]
+        }
+    });
 
     if (spot === null) {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
     }
+
+    // Lazy loading User as Owner as a workaround for aliasing issues
+    spot = spot.toJSON();
+
+    const owner = await User.findByPk(spot.ownerId, {
+        attributes: ['id', 'firstName', 'lastName']
+    });
+
+    spot.Owner = owner;
 
     res.json(spot);
 });
