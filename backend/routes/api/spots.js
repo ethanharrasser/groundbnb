@@ -72,16 +72,6 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
     let spots = await Spot.findAll({
         ...queryFilters,
         ...pagination,
-
-        // // Eager load previewImage
-        // include: {
-        //     model: SpotImage,
-        //     attributes: [['url', 'previewImage']],
-        //     where: {
-        //         preview: true,
-        //     },
-        //     limit: 1,
-        // }
     });
 
     // This entire block could probably be condensed into a helper function - todo later?
