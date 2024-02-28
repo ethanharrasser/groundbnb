@@ -1,5 +1,5 @@
 const express = require('express');
-const { Op, fn, col } = require('sequelize');
+const { fn, col } = require('sequelize');
 
 const { requireAuth } = require('../../utils/auth.js');
 const { Review, ReviewImage, User, Spot, SpotImage } = require('../../db/models');
@@ -50,7 +50,33 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // POST /api/reviews/:reviewId/images
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
+    const review = await Review.findByPk(req.params.reviewId);
 
+    if (review === null) {
+        return res.status(404).json({ message: 'Review couldn\'t be found' });
+    }
+    if (review.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const reviewImageCount = await ReviewImage.count({
+        where: {
+            reviewId: req.params.reviewId
+        }
+    });
+
+    console.log(`review image count: ${reviewImageCount} ... req.params.reviewId: ${req.params.reviewId} ... `);
+
+    if (reviewImageCount === 10) {
+        return res.status(403).json({ message: 'Maximum number of images for this resource was reached' });
+    }
+
+    const reviewImage = await ReviewImage.create({
+        reviewId: req.params.reviewId,
+        url: req.body.url
+    });
+
+    res.json({ id: reviewImage.id, url: reviewImage.url });
 });
 
 // PUT /api/reviews/:reviewId
