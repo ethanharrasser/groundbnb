@@ -281,4 +281,14 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
     res.json(spotImage);
 });
 
+// GET /api/spots/:spotId/reviews
+router.get('/:spotId/reviews', async (req, res) => {
+
+});
+
+// POST /api/spots/:spotId/reviews
+router.post('/:spotId/reviews', requireAuth, async (req, res) => {
+
+});
+
 module.exports = router;
