@@ -83,7 +83,7 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
         ...pagination
     });
 
-    res.json(spots);
+    res.json({ Spots: spots, page: page, size: size});
 });
 
 // POST /api/spots
