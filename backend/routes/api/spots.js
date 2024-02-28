@@ -9,10 +9,14 @@ const router = express.Router();
 
 // GET /api/spots
 router.get('/', validateSpotQueryFilters, async (req, res) => {
-    const {
+    let {
         page, size, minLat, maxLat,
         minLng, maxLng, minPrice, maxPrice
     } = req.query
+
+    // Convert to integers
+    page = +page;
+    size = +size;
 
     const pagination = {
         limit: size,
