@@ -1,7 +1,7 @@
 const express = require('express');
 const { Op, fn, col } = require('sequelize');
 
-const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
+const { validateSpot, validateSpotQueryFilters, validateReview } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
 const { Spot, SpotImage, Review, ReviewImage, User } = require('../../db/models');
 
@@ -293,8 +293,31 @@ router.get('/:spotId/reviews', async (req, res) => {
 });
 
 // POST /api/spots/:spotId/reviews
-router.post('/:spotId/reviews', requireAuth, async (req, res) => {
+router.post('/:spotId/reviews', requireAuth, validateReview, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
 
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    const existingReview = await Review.findOne({
+        where: {
+            userId: req.user.id
+        }
+    });
+
+    if (existingReview !== null) {
+        return res.status(500).json({ message: 'User already has a review for this spot' });
+    }
+
+    const review = await Review.create({
+        userId: req.user.id,
+        spotId: req.params.spotId,
+        review: req.body.review,
+        stars: req.body.stars
+    });
+
+    res.json(review);
 });
 
 module.exports = router;

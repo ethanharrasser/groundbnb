@@ -11,7 +11,7 @@ const handleValidationErrors = (req, _res, next) => {
             errors[error.path] = error.msg;
         });
 
-        const err = new Error('Bad request.');
+        const err = new Error('Bad Request');
         err.errors = errors;
         err.status = 400;
         err.title = 'Bad Request';
@@ -134,9 +134,22 @@ const validateSignup = [
     handleValidationErrors
 ];
 
+// Review data validation middleware
+const validateReview = [
+    check('review')
+        .exists({ values: 'falsy' })
+        .withMessage('Review text is required'),
+    check('stars')
+        .exists({ values: 'falsy' })
+        .custom(value => value >= 1 && value <= 5)
+        .withMessage('Stars must be an integer from 1 to 5'),
+    handleValidationErrors
+];
+
 module.exports = {
     handleValidationErrors,
     validateSpot,
     validateSignup,
     validateSpotQueryFilters,
+    validateReview
 };
