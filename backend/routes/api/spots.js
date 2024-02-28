@@ -3,7 +3,7 @@ const { Op, fn, col } = require('sequelize');
 
 const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot, SpotImage, Review, User } = require('../../db/models');
+const { Spot, SpotImage, Review, ReviewImage, User } = require('../../db/models');
 
 const router = express.Router();
 
@@ -273,7 +273,23 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
 
 // GET /api/spots/:spotId/reviews
 router.get('/:spotId/reviews', async (req, res) => {
+    let reviews = await Review.findAll({
+        where: {
+            spotId: req.params.spotId
+        },
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'firstName', 'lastName']
+            },
+            {
+                model: ReviewImage,
+                attributes: ['id', 'url']
+            }
+        ]
+    });
 
+    res.json({ Reviews: reviews });
 });
 
 // POST /api/spots/:spotId/reviews

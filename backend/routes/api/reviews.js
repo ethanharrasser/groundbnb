@@ -25,8 +25,6 @@ router.get('/current', requireAuth, async (req, res) => {
         ]
     });
 
-    console.log(reviews.Spot)
-
     reviews = await Promise.all(
         reviews.map(async review => {
             review = review.toJSON()
