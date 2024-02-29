@@ -158,13 +158,6 @@ const validateReview = [
     handleValidationErrors
 ];
 
-// Booking data validation middleware
-const validateBooking = [
-    check('startDate'),
-    check('endDate'),
-    handleValidationErrors
-];
-
 module.exports = {
     handleValidationErrors,
     validateLogin,
@@ -172,5 +165,4 @@ module.exports = {
     validateSpot,
     validateSpotQueryFilters,
     validateReview,
-    validateBooking
 };

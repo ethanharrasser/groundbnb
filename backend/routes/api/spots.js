@@ -359,4 +359,41 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
     res.status(200).json({ Bookings: bookings });
 });
 
+// POST /api/spots/:spotId/bookings
+router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+    if (spot.ownerId === req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const { startDate, endDate } = req.body;
+    const startDateTime = new Date(startDate).getTime();
+    const endDateTime = new Date(endDate).getTime();
+
+    // Date validation middleware
+    try {
+        if (startDateTime <= Date.now()) {
+            throw new Error('startDate cannot be in the past');
+        }
+        if (endDateTime <= startDateTime) {
+            throw new Error('endDate cannot be on or before startDate');
+        }
+    } catch (err) {
+        err.title = 'Bad Request';
+        err.status = 400;
+        next(err);
+    }
+
+    const booking = await Booking.create({
+        startDate,
+        endDate
+    });
+
+    res.status(200).json(booking);
+});
+
 module.exports = router;
