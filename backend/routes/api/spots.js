@@ -1,9 +1,9 @@
 const express = require('express');
 const { Op, fn, col } = require('sequelize');
 
-const { validateSpot, validateSpotQueryFilters } = require('../../utils/validation.js');
+const { validateSpot, validateSpotQueryFilters, validateReview } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot, SpotImage, Review, User } = require('../../db/models');
+const { Spot, SpotImage, Review, ReviewImage, User } = require('../../db/models');
 
 const router = express.Router();
 
@@ -72,16 +72,6 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
     let spots = await Spot.findAll({
         ...queryFilters,
         ...pagination,
-
-        // // Eager load previewImage
-        // include: {
-        //     model: SpotImage,
-        //     attributes: [['url', 'previewImage']],
-        //     where: {
-        //         preview: true,
-        //     },
-        //     limit: 1,
-        // }
     });
 
     // This entire block could probably be condensed into a helper function - todo later?
@@ -279,6 +269,59 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
     });
 
     res.json(spotImage);
+});
+
+// GET /api/spots/:spotId/reviews
+router.get('/:spotId/reviews', async (req, res) => {
+    let reviews = await Review.findAll({
+        where: {
+            spotId: req.params.spotId
+        },
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'firstName', 'lastName']
+            },
+            {
+                model: ReviewImage,
+                attributes: ['id', 'url']
+            }
+        ]
+    });
+
+    if (!reviews.length) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    res.json({ Reviews: reviews });
+});
+
+// POST /api/spots/:spotId/reviews
+router.post('/:spotId/reviews', requireAuth, validateReview, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    const existingReview = await Review.findOne({
+        where: {
+            userId: req.user.id
+        }
+    });
+
+    if (existingReview !== null) {
+        return res.status(500).json({ message: 'User already has a review for this spot' });
+    }
+
+    const review = await Review.create({
+        userId: req.user.id,
+        spotId: req.params.spotId,
+        review: req.body.review,
+        stars: req.body.stars
+    });
+
+    res.json(review);
 });
 
 module.exports = router;
