@@ -1,5 +1,4 @@
 const express = require('express');
-const { fn, col } = require('sequelize');
 
 const { requireAuth } = require('../../utils/auth.js');
 const { Review, ReviewImage, User, Spot, SpotImage } = require('../../db/models');
