@@ -43,4 +43,6 @@ router.get('/current', requireAuth, async (req, res) => {
     res.status(200).json({ Bookings: bookings });
 });
 
+
+
 module.exports = router;

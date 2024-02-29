@@ -3,7 +3,7 @@ const { Op, fn, col } = require('sequelize');
 
 const { validateSpot, validateSpotQueryFilters, validateReview } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot, SpotImage, Review, ReviewImage, User } = require('../../db/models');
+const { Spot, SpotImage, User, Review, ReviewImage, Booking } = require('../../db/models');
 
 const router = express.Router();
 
@@ -277,6 +277,12 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
 
 // GET /api/spots/:spotId/reviews
 router.get('/:spotId/reviews', async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
     let reviews = await Review.findAll({
         where: {
             spotId: req.params.spotId
@@ -292,10 +298,6 @@ router.get('/:spotId/reviews', async (req, res) => {
             }
         ]
     });
-
-    if (!reviews.length) {
-        return res.status(404).json({ message: 'Spot couldn\'t be found' });
-    }
 
     res.status(200).json({ Reviews: reviews });
 });
@@ -326,6 +328,35 @@ router.post('/:spotId/reviews', requireAuth, validateReview, async (req, res) =>
     });
 
     res.status(201).json(review);
+});
+
+// GET /api/spots/:spotId/bookings
+router.get('/:spotId/bookings', requireAuth, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    // Set query options based on whether user is the owner of the spot
+    const queryOptions = {};
+    if (spot.ownerId === req.user.id) {
+        queryOptions.include = {
+            model: User,
+            attributes: ['id', 'firstName', 'lastName']
+        };
+    } else {
+        queryOptions.attributes = ['spotId', 'startDate', 'endDate'];
+    }
+
+    const bookings = await Booking.findAll({
+        where: {
+            spotId: req.params.spotId
+        },
+        ...queryOptions
+    });
+
+    res.status(200).json({ Bookings: bookings });
 });
 
 module.exports = router;
