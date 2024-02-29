@@ -21,6 +21,47 @@ const handleValidationErrors = (req, _res, next) => {
     next();
 };
 
+// Credential and password validation middleware
+const validateLogin = [
+    check('credential')
+        .exists({ values: 'falsy' })
+        .notEmpty()
+        .withMessage('Email or username is required'),
+    check('password')
+        .exists({ values: 'falsy' })
+        .withMessage('Password is required'),
+    handleValidationErrors
+];
+
+// User signup username, email, and password validation middleware
+const validateSignup = [
+    check('firstName')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 2 })
+        .withMessage('First Name is required'),
+    check('lastName')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 2 })
+        .withMessage('Last Name is required'),
+    check('email')
+        .exists({ values: 'falsy' })
+        .isEmail()
+        .withMessage('Invalid email'),
+    check('username')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 4 })
+        .withMessage('Username is required'),
+    check('username')
+        .not()
+        .isEmail()
+        .withMessage('Username is required'),
+    check('password')
+        .exists({ values: 'falsy' })
+        .isLength({ min: 6 })
+        .withMessage('Password is required'),
+    handleValidationErrors
+];
+
 // Spot data validation middleware
 const validateSpot = [
     check('address')
@@ -58,7 +99,7 @@ const validateSpot = [
         .custom(value => value >= 0)
         .withMessage('Price per day must be a positive number'),
     handleValidationErrors
-]
+];
 
 // Spot query filters validation middleware
 const validateSpotQueryFilters = [
@@ -103,35 +144,6 @@ const validateSpotQueryFilters = [
         .custom(value => value > 0)
         .withMessage('Maximum price must be greater than or equal to 0'),
     handleValidationErrors
-]
-
-// User signup username, email, and password validation middleware
-const validateSignup = [
-    check('firstName')
-        .exists({ values: 'falsy' })
-        .isLength({ min: 2 })
-        .withMessage('Please provide a first name with 2 or more characters.'),
-    check('lastName')
-        .exists({ values: 'falsy' })
-        .isLength({ min: 2 })
-        .withMessage('Please provide a last name with 2 or more characters.'),
-    check('email')
-        .exists({ values: 'falsy' })
-        .isEmail()
-        .withMessage('Please provide a valid email address.'),
-    check('username')
-        .exists({ values: 'falsy' })
-        .isLength({ min: 4 })
-        .withMessage('Please provide a username with 4 or more characters.'),
-    check('username')
-        .not()
-        .isEmail()
-        .withMessage('Username cannot be an email address.'),
-    check('password')
-        .exists({ values: 'falsy' })
-        .isLength({ min: 6 })
-        .withMessage('Password must be 6 or more characters.'),
-    handleValidationErrors
 ];
 
 // Review data validation middleware
@@ -148,8 +160,9 @@ const validateReview = [
 
 module.exports = {
     handleValidationErrors,
-    validateSpot,
+    validateLogin,
     validateSignup,
+    validateSpot,
     validateSpotQueryFilters,
     validateReview
 };

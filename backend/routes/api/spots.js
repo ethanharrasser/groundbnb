@@ -107,7 +107,7 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
         })
     );
 
-    res.json({ Spots: spots, page: page, size: size });
+    res.status(200).json({ Spots: spots, page: page, size: size });
 });
 
 // POST /api/spots
@@ -124,7 +124,7 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
         lat, lng, name, description, price
     });
 
-    res.json(newSpot);
+    res.status(201).json(newSpot);
 });
 
 // GET /api/spots/current
@@ -167,7 +167,7 @@ router.get('/current', requireAuth, async (req, res) => {
         })
     );
 
-    res.json(spots);
+    res.status(200).json(spots);
 });
 
 // GET /api/spots/:spotId
@@ -203,7 +203,7 @@ router.get('/:spotId', async (req, res) => {
 
     spot.Owner = owner;
 
-    res.json(spot);
+    res.status(200).json(spot);
 });
 
 // PUT /api/spots/:spotId
@@ -233,7 +233,7 @@ router.put('/:spotId', requireAuth, validateSpot, async (req, res) => {
     spot.price = price;
 
     await spot.save();
-    res.json(spot);
+    res.status(200).json(spot);
 });
 
 // DELETE /api/spots/:spotId
@@ -248,7 +248,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
     }
 
     await spot.delete()
-    res.json({ message: 'Successfully deleted' });
+    res.status(200).json({ message: 'Successfully deleted' });
 });
 
 // POST /api/spots/:spotId/images
@@ -268,7 +268,11 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
         preview
     });
 
-    res.json(spotImage);
+    res.status(200).json({
+        id: spotImage.id,
+        url: spotImage.url,
+        preview: spotImage.preview
+    });
 });
 
 // GET /api/spots/:spotId/reviews
@@ -293,7 +297,7 @@ router.get('/:spotId/reviews', async (req, res) => {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
     }
 
-    res.json({ Reviews: reviews });
+    res.status(200).json({ Reviews: reviews });
 });
 
 // POST /api/spots/:spotId/reviews
@@ -321,7 +325,7 @@ router.post('/:spotId/reviews', requireAuth, validateReview, async (req, res) =>
         stars: req.body.stars
     });
 
-    res.json(review);
+    res.status(201).json(review);
 });
 
 module.exports = router;

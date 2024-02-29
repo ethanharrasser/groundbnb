@@ -46,7 +46,7 @@ router.get('/current', requireAuth, async (req, res) => {
         })
     );
 
-    res.json({ Reviews: reviews });
+    res.status(200).json({ Reviews: reviews });
 });
 
 // POST /api/reviews/:reviewId/images
@@ -77,7 +77,7 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
         url: req.body.url
     });
 
-    res.json({ id: reviewImage.id, url: reviewImage.url });
+    res.status(200).json({ id: reviewImage.id, url: reviewImage.url });
 });
 
 // PUT /api/reviews/:reviewId
@@ -94,13 +94,11 @@ router.put('/:reviewId', requireAuth, validateReview, async (req, res) => {
 
     const { review, stars } = req.body
 
-
-
     existingReview.review = review;
     existingReview.stars = stars;
 
     await existingReview.save();
-    res.json(existingReview);
+    res.status(200).json(existingReview);
 });
 
 // DELETE /api/reviews/:reviewId
@@ -116,7 +114,7 @@ router.delete('/:reviewId', requireAuth, async (req, res) => {
     }
 
     existingReview.destroy();
-    res.json({ message: 'Successfully deleted' });
+    res.status(200).json({ message: 'Successfully deleted' });
 });
 
 module.exports = router;

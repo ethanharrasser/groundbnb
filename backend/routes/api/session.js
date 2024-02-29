@@ -3,30 +3,18 @@ const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 const { check } = require('express-validator');
 
-const { handleValidationErrors } = require('../../utils/validation.js');
+const { handleValidationErrors, validateLogin } = require('../../utils/validation.js');
 const { setTokenCookie, restoreUser } = require('../../utils/auth.js');
 const { User } = require('../../db/models');
 
 const router = express.Router();
-
-// Credential and password validation middleware
-const validateLogin = [
-    check('credential')
-        .exists({ values: 'falsy' })
-        .notEmpty()
-        .withMessage('Please provide a valid email or username.'),
-    check('password')
-        .exists({ values: 'falsy' })
-        .withMessage('Please provide a password.'),
-    handleValidationErrors
-];
 
 // GET /api/session
 router.get('/', async (req, res) => {
     const { user } = req;
 
     if (!user) {
-        return res.json({ user: null });
+        return res.status(200).json({ user: null });
     };
 
     const safeUser = {
@@ -37,7 +25,7 @@ router.get('/', async (req, res) => {
         username: user.username
     };
 
-    res.json({ user: safeUser });
+    res.status(200).json({ user: safeUser });
 });
 
 // POST /api/session
@@ -69,17 +57,15 @@ router.post('/', validateLogin, async (req, res, next) => {
         username: user.username
     };
 
-    await setTokenCookie(res, safeUser);
+    setTokenCookie(res, safeUser);
 
-    res.json({
-        user: safeUser
-    });
+    res.status(200).json({ user: safeUser });
 });
 
 // DELETE /api/session
 router.delete('/', (_req, res) => {
     res.clearCookie('token');
-    res.json({ message: 'Success' });
+    res.status(200).json({ message: 'Successfully logged out' });
 });
 
 module.exports = router;
