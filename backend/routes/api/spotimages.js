@@ -1,7 +1,5 @@
 const express = require('express');
-const {  } = require('sequelize');
 
-const {  } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
 const { SpotImage, Spot } = require('../../db/models');
 

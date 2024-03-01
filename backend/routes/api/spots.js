@@ -371,8 +371,12 @@ router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
     }
 
     const { startDate, endDate } = req.body;
-    const startDateTime = new Date(startDate).getTime();
-    const endDateTime = new Date(endDate).getTime();
+
+    // Ignore time
+    const startDateStr = new Date(startDate).toDateString();
+    const startDateTime = new Date(startDateStr).getTime();
+    const endDateStr = new Date(endDate).toDateString();
+    const endDateTime = new Date(endDateStr).getTime();
 
     // Date validation middleware
     try {
@@ -388,7 +392,69 @@ router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
         next(err);
     }
 
+    const allBookings = await Booking.findAll({
+        where: {
+            [Op.or]: {
+                spotId: req.params.spotId,
+                userId: req.user.id
+            }
+        }
+    });
+
+    const conflictErrors = {};
+
+    allBookings.forEach(booking => {
+        booking = booking.toJSON();
+
+        // Ignore time
+        const existingStartDateStr = new Date(booking.startDate).toDateString();
+        const existingStartDateTime = new Date(existingStartDateStr).getTime();
+
+        const existingEndDateStr = new Date(booking.endDate).toDateString();
+        const existingEndDateTime = new Date(existingEndDateStr).getTime();
+
+        console.log(`\nstartDate: ${startDate}(${startDateTime})\n`)
+        console.log(`endDate: ${endDate}(${endDateTime})\n`)
+        console.log(`existingStartDate: ${existingStartDateStr}(${existingStartDateTime})\n`)
+        console.log(`existingEndDate: ${existingEndDateStr}(${existingEndDateTime})\n`)
+
+        // Check conflicts with startDate
+        if (startDateTime === existingStartDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        } else if (startDateTime === existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        } else if (startDateTime > existingStartDateTime && startDateTime < existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        }
+
+        // Check conflicts with endDate
+        if (endDateTime === existingStartDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        } else if (endDateTime === existingEndDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        } else if (endDateTime > existingStartDateTime && endDateTime < existingEndDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        }
+
+        // Check if dates surround existing dates
+        if (startDateTime < existingStartDateTime && endDateTime > existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        }
+    });
+
+    if (Object.keys(conflictErrors).length) {
+        return res.status(403).json({
+            message: 'Sorry, this spot is already booked for the specified dates',
+            errors: {
+                ...conflictErrors
+            }
+        })
+    }
+
     const booking = await Booking.create({
+        spotId: req.params.spotId,
+        userId: req.user.id,
         startDate,
         endDate
     });
