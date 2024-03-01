@@ -21,7 +21,7 @@ const handleValidationErrors = (req, _res, next) => {
     next();
 };
 
-// Credential and password validation middleware
+// User login credential and password validation middleware
 const validateLogin = [
     check('credential')
         .exists({ values: 'falsy' })
@@ -164,5 +164,5 @@ module.exports = {
     validateSignup,
     validateSpot,
     validateSpotQueryFilters,
-    validateReview
+    validateReview,
 };

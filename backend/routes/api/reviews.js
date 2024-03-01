@@ -1,5 +1,4 @@
 const express = require('express');
-const { fn, col } = require('sequelize');
 
 const { requireAuth } = require('../../utils/auth.js');
 const { Review, ReviewImage, User, Spot, SpotImage } = require('../../db/models');
@@ -66,8 +65,6 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
         }
     });
 
-    console.log(`review image count: ${reviewImageCount} ... req.params.reviewId: ${req.params.reviewId} ... `);
-
     if (reviewImageCount === 10) {
         return res.status(403).json({ message: 'Maximum number of images for this resource was reached' });
     }
@@ -88,7 +85,6 @@ router.put('/:reviewId', requireAuth, validateReview, async (req, res) => {
         return res.status(404).json({ message: 'Review couldn\'t be found' });
     }
     if (existingReview.userId !== req.user.id) {
-        console.log(existingReview.userId)
         return res.status(403).json({ message: 'Forbidden' })
     }
 
@@ -109,7 +105,6 @@ router.delete('/:reviewId', requireAuth, async (req, res) => {
         return res.status(404).json({ message: 'Review couldn\'t be found' });
     }
     if (existingReview.userId !== req.user.id) {
-        console.log(existingReview.userId)
         return res.status(403).json({ message: 'Forbidden' })
     }
 

@@ -48,16 +48,6 @@ module.exports = {
 
   async down (queryInterface, Sequelize) {
     options.tableName = 'Reviews'
-    const Op = Sequelize.Op
-    return queryInterface.bulkDelete(options, {
-      review: {
-        [Op.in]: [
-          'Waste of money. Laundry machine made my clothes dirtier. Nice bed though',
-          'Made me inexplicably commit arson. Currently serving 8 years. House is probably haunted.',
-          'the owner broke up with me. i didnt even book the place',
-          'the owner and i got married after having an affair. Great place'
-        ]
-      }
-    }, {});
+    return queryInterface.bulkDelete(options, null, {});
   }
 };

@@ -3,7 +3,7 @@ const { Op, fn, col } = require('sequelize');
 
 const { validateSpot, validateSpotQueryFilters, validateReview } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
-const { Spot, SpotImage, Review, ReviewImage, User } = require('../../db/models');
+const { Spot, SpotImage, User, Review, ReviewImage, Booking } = require('../../db/models');
 
 const router = express.Router();
 
@@ -172,26 +172,28 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
-    let spot = await Spot.findByPk(req.params.spotId, {
-        include: [
-            {
-                model: SpotImage
-            },
-            {
-                model: Review,
-                attributes: []
-            }
-        ],
-        attributes: {
-            include: [
-                [fn('COUNT', col('Reviews.id')), 'numReviews'],
-                [fn('AVG', col('Reviews.stars')), 'avgStarRating']
-            ]
-        }
-    });
+    let spot = await Spot.findByPk(req.params.spotId);
 
     if (spot === null) {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    } else {
+        spot = await Spot.findByPk(req.params.spotId, {
+            include: [
+                {
+                    model: SpotImage
+                },
+                {
+                    model: Review,
+                    attributes: []
+                }
+            ],
+            attributes: {
+                include: [
+                    [fn('COUNT', col('Reviews.id')), 'numReviews'],
+                    [fn('AVG', col('Reviews.stars')), 'avgStarRating']
+                ]
+            }
+        });
     }
 
     // Lazy loading User as Owner as a workaround for aliasing issues
@@ -247,7 +249,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
         return res.status(403).json({ message: 'Forbidden' })
     }
 
-    await spot.delete()
+    await spot.destroy()
     res.status(200).json({ message: 'Successfully deleted' });
 });
 
@@ -264,6 +266,7 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
 
     const { url, preview } = req.body;
     const spotImage = await SpotImage.create({
+        spotId: req.params.spotId,
         url,
         preview
     });
@@ -277,6 +280,12 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
 
 // GET /api/spots/:spotId/reviews
 router.get('/:spotId/reviews', async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
     let reviews = await Review.findAll({
         where: {
             spotId: req.params.spotId
@@ -292,10 +301,6 @@ router.get('/:spotId/reviews', async (req, res) => {
             }
         ]
     });
-
-    if (!reviews.length) {
-        return res.status(404).json({ message: 'Spot couldn\'t be found' });
-    }
 
     res.status(200).json({ Reviews: reviews });
 });
@@ -326,6 +331,130 @@ router.post('/:spotId/reviews', requireAuth, validateReview, async (req, res) =>
     });
 
     res.status(201).json(review);
+});
+
+// GET /api/spots/:spotId/bookings
+router.get('/:spotId/bookings', requireAuth, async (req, res) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    // Set query options based on whether user is the owner of the spot
+    const queryOptions = {};
+    if (spot.ownerId === req.user.id) {
+        queryOptions.include = {
+            model: User,
+            attributes: ['id', 'firstName', 'lastName']
+        };
+    } else {
+        queryOptions.attributes = ['spotId', 'startDate', 'endDate'];
+    }
+
+    const bookings = await Booking.findAll({
+        where: {
+            spotId: req.params.spotId
+        },
+        ...queryOptions
+    });
+
+    res.status(200).json({ Bookings: bookings });
+});
+
+// POST /api/spots/:spotId/bookings
+router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    if (spot === null) {
+        return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+    if (spot.ownerId === req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const { startDate, endDate } = req.body;
+
+    // Ignore time
+    const startDateStr = new Date(startDate).toDateString();
+    const startDateTime = new Date(startDateStr).getTime();
+    const endDateStr = new Date(endDate).toDateString();
+    const endDateTime = new Date(endDateStr).getTime();
+
+    // Date validation middleware
+    try {
+        if (startDateTime <= Date.now()) {
+            throw new Error('startDate cannot be in the past');
+        }
+        if (endDateTime <= startDateTime) {
+            throw new Error('endDate cannot be on or before startDate');
+        }
+    } catch (err) {
+        err.title = 'Bad Request';
+        err.status = 400;
+        return next(err);
+    }
+
+    const allBookings = await Booking.findAll({
+        where: {
+            spotId: req.params.spotId,
+        }
+    });
+
+    const conflictErrors = {};
+
+    allBookings.forEach(booking => {
+        booking = booking.toJSON();
+
+        // Ignore time
+        const existingStartDateStr = new Date(booking.startDate).toDateString();
+        const existingStartDateTime = new Date(existingStartDateStr).getTime();
+
+        const existingEndDateStr = new Date(booking.endDate).toDateString();
+        const existingEndDateTime = new Date(existingEndDateStr).getTime();
+
+        // Check conflicts with startDate
+        if (startDateTime === existingStartDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        } else if (startDateTime === existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        } else if (startDateTime > existingStartDateTime && startDateTime < existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+        }
+
+        // Check conflicts with endDate
+        if (endDateTime === existingStartDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        } else if (endDateTime === existingEndDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        } else if (endDateTime > existingStartDateTime && endDateTime < existingEndDateTime) {
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        }
+
+        // Check if dates surround existing dates
+        if (startDateTime < existingStartDateTime && endDateTime > existingEndDateTime) {
+            conflictErrors.startDate = 'Start date conflicts with an existing booking';
+            conflictErrors.endDate = 'End date conflicts with an existing booking';
+        }
+    });
+
+    if (Object.keys(conflictErrors).length) {
+        return res.status(403).json({
+            message: 'Sorry, this spot is already booked for the specified dates',
+            errors: {
+                ...conflictErrors
+            }
+        })
+    }
+
+    const booking = await Booking.create({
+        spotId: req.params.spotId,
+        userId: req.user.id,
+        startDate,
+        endDate
+    });
+
+    res.status(200).json(booking);
 });
 
 module.exports = router;
