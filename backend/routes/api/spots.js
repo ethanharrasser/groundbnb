@@ -193,7 +193,7 @@ router.get('/:spotId', async (req, res) => {
                     [fn('AVG', col('Reviews.stars')), 'avgStarRating']
                 ]
             },
-            group: [ 'id' ]
+            group: [ 'Spot.id' ]
         });
     }
 
