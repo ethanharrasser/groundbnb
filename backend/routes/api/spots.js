@@ -249,7 +249,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
         return res.status(403).json({ message: 'Forbidden' })
     }
 
-    await spot.delete()
+    await spot.destroy()
     res.status(200).json({ message: 'Successfully deleted' });
 });
 
@@ -266,6 +266,7 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
 
     const { url, preview } = req.body;
     const spotImage = await SpotImage.create({
+        spotId: req.params.spotId,
         url,
         preview
     });
@@ -391,15 +392,12 @@ router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
     } catch (err) {
         err.title = 'Bad Request';
         err.status = 400;
-        next(err);
+        return next(err);
     }
 
     const allBookings = await Booking.findAll({
         where: {
-            [Op.or]: {
-                spotId: req.params.spotId,
-                userId: req.user.id
-            }
+            spotId: req.params.spotId,
         }
     });
 
@@ -414,11 +412,6 @@ router.post('/:spotId/bookings', requireAuth, async (req, res, next) => {
 
         const existingEndDateStr = new Date(booking.endDate).toDateString();
         const existingEndDateTime = new Date(existingEndDateStr).getTime();
-
-        console.log(`\nstartDate: ${startDate}(${startDateTime})\n`)
-        console.log(`endDate: ${endDate}(${endDateTime})\n`)
-        console.log(`existingStartDate: ${existingStartDateStr}(${existingStartDateTime})\n`)
-        console.log(`existingEndDate: ${existingEndDateStr}(${existingEndDateTime})\n`)
 
         // Check conflicts with startDate
         if (startDateTime === existingStartDateTime) {

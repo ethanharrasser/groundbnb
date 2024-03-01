@@ -38,16 +38,6 @@ module.exports = {
 
   async down (queryInterface, Sequelize) {
     options.tableName = 'SpotImages'
-    const Op = Sequelize.Op
-    return queryInterface.bulkDelete(options, {
-      url: {
-        [Op.in]: [
-          'https://static.wikia.nocookie.net/elderscrolls/images/9/98/Breezerhome.jpg/revision/latest/scale-to-width-down/1000?cb=20111120111740',
-          'https://static.wikia.nocookie.net/elderscrolls/images/e/ed/Honeyside_view.png/revision/latest/scale-to-width-down/1000?cb=20121109235901',
-          'https://static.wikia.nocookie.net/elderscrolls/images/1/1a/Proudspire_Manor_Solitude.jpg/revision/latest/scale-to-width-down/1000?cb=20111113130716',
-          'https://static.wikia.nocookie.net/elderscrolls/images/7/76/Severin_Manor.png/revision/latest/scale-to-width-down/1000?cb=20130206192733'
-        ]
-      }
-    }, {});
+    return queryInterface.bulkDelete(options, null, {});
   }
 };

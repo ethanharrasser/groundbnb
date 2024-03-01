@@ -1,5 +1,4 @@
 const express = require('express');
-const { col } = require('sequelize');
 
 const {  } = require('../../utils/validation.js');
 const { requireAuth } = require('../../utils/auth.js');
