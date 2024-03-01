@@ -2,7 +2,7 @@ const express = require('express');
 
 const { requireAuth } = require('../../utils/auth.js');
 const { Booking, Spot, SpotImage } = require('../../db/models');
-const { validateBooking } = require('../../utils/validation.js');
+// const {  } = require('../../utils/validation.js');
 
 const router = express.Router();
 
@@ -43,6 +43,50 @@ router.get('/current', requireAuth, async (req, res) => {
     res.status(200).json({ Bookings: bookings });
 });
 
+// PUT /api/bookings/:bookingId
+router.put('/:bookingId', requireAuth, async (req, res) => {
+    const booking = await Booking.findByPk(req.params.bookingId);
 
+    if (booking === null) {
+        return res.status(404).json({ message: 'Booking couldn\'t be found' });
+    }
+    if (booking.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+    if (new Date(booking.endDate).getTime() >= Date.now()) {
+        return res.status(400).json({ message: 'Past bookings can\'t be modified' });
+    }
+
+    const { startDate, endDate } = req.body;
+
+    // TODO: Check for conflicting booking dates
+
+    booking.startDate = startDate;
+    booking.endDate = endDate;
+
+    await booking.save();
+    res.status(200).json(booking);
+});
+
+// DELETE /api/bookings/:bookingId
+router.delete('/:bookingId', requireAuth, async (req, res) => {
+    const booking = await Booking.findByPk(req.params.bookingId);
+
+    if (booking === null) {
+        return res.status(404).json({ message: 'Booking couldn\'t be found' });
+    }
+    if (new Date(booking.startDate).getTime() >= Date.now()) {
+        return res.status(400).json({ message: 'Bookings that have been started can\'t be deleted' });
+    }
+
+    const spot = await Spot.findByPk(booking.spotId);
+
+    if (booking.userId !== req.user.id && spot.ownerId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    await booking.destroy();
+    res.status(200).json({ message: 'Succesfully deleted' });
+});
 
 module.exports = router;
