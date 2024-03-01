@@ -172,26 +172,28 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
-    let spot = await Spot.findByPk(req.params.spotId, {
-        include: [
-            {
-                model: SpotImage
-            },
-            {
-                model: Review,
-                attributes: []
-            }
-        ],
-        attributes: {
-            include: [
-                [fn('COUNT', col('Reviews.id')), 'numReviews'],
-                [fn('AVG', col('Reviews.stars')), 'avgStarRating']
-            ]
-        }
-    });
+    let spot = await Spot.findByPk(req.params.spotId);
 
     if (spot === null) {
         return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    } else {
+        spot = await Spot.findByPk(req.params.spotId, {
+            include: [
+                {
+                    model: SpotImage
+                },
+                {
+                    model: Review,
+                    attributes: []
+                }
+            ],
+            attributes: {
+                include: [
+                    [fn('COUNT', col('Reviews.id')), 'numReviews'],
+                    [fn('AVG', col('Reviews.stars')), 'avgStarRating']
+                ]
+            }
+        });
     }
 
     // Lazy loading User as Owner as a workaround for aliasing issues
