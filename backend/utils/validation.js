@@ -114,32 +114,32 @@ const validateSpotQueryFilters = [
         .custom(value => value >= 1 && value <= 20)
         .withMessage('Size must be greater than or equal to 1'),
     query('minLat')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value > -90)
         .withMessage('Minimum latitude is invalid'),
     query('maxLat')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value < 90)
         .withMessage('Maximum latitude is invalid'),
     query('minLng')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value > -180)
         .withMessage('Minimum longitude is invalid'),
     query('maxLng')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value < 180)
         .withMessage('Maximum longitude is invalid'),
     query('minPrice')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value > 0)
         .withMessage('Minimum price must be greater than or equal to 0'),
     query('maxPrice')
-        .optional({ nullable: true })
+        .optional({ values: 'falsy' })
         .isDecimal()
         .custom(value => value > 0)
         .withMessage('Maximum price must be greater than or equal to 0'),
