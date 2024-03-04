@@ -103,43 +103,43 @@ const validateSpot = [
 
 // Spot query filters validation middleware
 const validateSpotQueryFilters = [
-    query('page')
+    check('page')
         .default('1')
         .isInt()
         .custom(value => value >= 1 && value <= 10)
         .withMessage('Page must be greater than or equal to 1'),
-    query('size')
+    check('size')
         .default('20')
         .isInt()
         .custom(value => value >= 1 && value <= 20)
         .withMessage('Size must be greater than or equal to 1'),
-    query('minLat')
-        .optional({ values: 'falsy' })
+    check('minLat')
+        .optional()
         .isDecimal()
         .custom(value => value > -90)
         .withMessage('Minimum latitude is invalid'),
-    query('maxLat')
-        .optional({ values: 'falsy' })
+    check('maxLat')
+        .optional()
         .isDecimal()
         .custom(value => value < 90)
         .withMessage('Maximum latitude is invalid'),
-    query('minLng')
-        .optional({ values: 'falsy' })
+    check('minLng')
+        .optional()
         .isDecimal()
         .custom(value => value > -180)
         .withMessage('Minimum longitude is invalid'),
-    query('maxLng')
-        .optional({ values: 'falsy' })
+    check('maxLng')
+        .optional()
         .isDecimal()
         .custom(value => value < 180)
         .withMessage('Maximum longitude is invalid'),
-    query('minPrice')
-        .optional({ values: 'falsy' })
+    check('minPrice')
+        .optional()
         .isDecimal()
         .custom(value => value > 0)
         .withMessage('Minimum price must be greater than or equal to 0'),
-    query('maxPrice')
-        .optional({ values: 'falsy' })
+    check('maxPrice')
+        .optional()
         .isDecimal()
         .custom(value => value > 0)
         .withMessage('Maximum price must be greater than or equal to 0'),
