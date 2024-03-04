@@ -14,6 +14,8 @@ router.get('/', validateSpotQueryFilters, async (req, res) => {
         minLng, maxLng, minPrice, maxPrice
     } = req.query
 
+    if (Number.isNaN(page) || page < 1)
+
     // Convert to integers
     page = +page;
     size = +size;

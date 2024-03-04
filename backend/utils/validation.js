@@ -135,12 +135,12 @@ const validateSpotQueryFilters = [
         .withMessage('Maximum longitude is invalid'),
     query('minPrice')
         .optional()
-        .isNumeric()
+        .isDecimal()
         .custom(value => value > 0)
         .withMessage('Minimum price must be greater than or equal to 0'),
     query('maxPrice')
         .optional()
-        .isNumeric()
+        .isDecimal()
         .custom(value => value > 0)
         .withMessage('Maximum price must be greater than or equal to 0'),
     handleValidationErrors
